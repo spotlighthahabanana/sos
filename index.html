@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="緊急求救">
+<meta name="theme-color" content="#b91c1c">
+<title>緊急求救 SOS</title>
+<style>
+  :root{
+    --red:#dc2626; --red-d:#991b1b; --bg:#0f0f10; --card:#1b1b1e; --line:#2c2c31;
+    --txt:#f4f4f5; --mute:#a1a1aa; --ok:#16a34a; --warn:#f59e0b;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+  body{padding:max(14px,env(safe-area-inset-top)) 14px max(20px,env(safe-area-inset-bottom))}
+  h1{font-size:20px;margin:4px 0 12px;display:flex;align-items:center;gap:8px}
+  h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 0 0 rgba(220,38,38,.7);animation:pulse 1.6s infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 10px rgba(220,38,38,0)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+  label{font-size:13px;color:var(--mute);display:block;margin-bottom:6px}
+  .row{display:flex;gap:8px}
+  input,textarea{width:100%;background:#0b0b0c;color:var(--txt);border:1px solid var(--line);
+    border-radius:12px;padding:12px;font-size:18px;outline:none}
+  input:focus,textarea:focus{border-color:var(--red)}
+  textarea{font-size:15px;resize:vertical;min-height:64px}
+  button{font:inherit;border:0;border-radius:12px;cursor:pointer;color:#fff}
+  .btn-sm{background:#2c2c31;padding:0 14px;font-size:15px;white-space:nowrap}
+  .contacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{display:flex;align-items:center;background:#26262b;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .chip.sel{border-color:var(--red);background:#3a1515}
+  .chip span{padding:8px 4px 8px 12px;font-size:15px}
+  .chip b{padding:8px 12px;color:var(--mute);font-weight:400}
+  #map{width:100%;height:260px;border:0;border-radius:12px;background:#222;display:block}
+  .loc{font-size:13px;color:var(--mute);margin-top:8px;line-height:1.5;word-break:break-all}
+  .loc strong{color:var(--txt)}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;margin-left:4px}
+  .b-ok{background:rgba(22,163,74,.2);color:#4ade80}
+  .b-warn{background:rgba(245,158,11,.2);color:#fbbf24}
+  .b-err{background:rgba(220,38,38,.2);color:#f87171}
+  .sos{width:100%;height:120px;font-size:30px;font-weight:800;letter-spacing:2px;
+    background:radial-gradient(circle at 50% 30%,#ef4444,var(--red-d));border-radius:20px;
+    box-shadow:0 8px 30px rgba(220,38,38,.35)}
+  .sos small{display:block;font-size:14px;font-weight:400;letter-spacing:0;opacity:.85;margin-top:4px}
+  .sos:active{transform:scale(.98)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .btn{padding:14px 8px;font-size:16px;background:#2c2c31}
+  .btn.call{background:var(--ok)}
+  .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .quick a{display:block;text-align:center;text-decoration:none;color:#fff;background:#2c2c31;
+    border-radius:12px;padding:12px 4px;font-size:22px;font-weight:700}
+  .quick a small{display:block;font-size:12px;font-weight:400;color:var(--mute)}
+  #callBar{position:fixed;left:0;right:0;bottom:0;padding:14px 14px max(14px,env(safe-area-inset-bottom));
+    background:#0f0f10ee;border-top:1px solid var(--line);display:none;backdrop-filter:blur(8px)}
+  #callBar a{display:block;text-align:center;background:var(--ok);color:#fff;text-decoration:none;
+    font-size:24px;font-weight:800;padding:20px;border-radius:16px}
+  #callBar p{margin:0 0 8px;text-align:center;color:var(--mute);font-size:14px}
+  .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#27272a;color:#fff;
+    padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:9}
+  .toast.show{opacity:1}
+  .hint{font-size:12px;color:var(--mute);line-height:1.6;margin:6px 2px 0}
+</style>
+</head>
+<body>
+
+<h1><span class="dot"></span>緊急求救</h1>
+
+<!-- 聯絡人 -->
+<div class="card">
+  <label>緊急聯絡人電話</label>
+  <div class="row">
+    <input id="phone" type="tel" inputmode="tel" placeholder="例：0912345678" autocomplete="tel">
+    <button class="btn-sm" id="saveBtn">儲存</button>
+  </div>
+  <div class="contacts" id="contacts"></div>
+</div>
+
+<!-- 地圖 -->
+<div class="card">
+  <iframe id="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="目前位置"></iframe>
+  <div class="loc" id="locInfo">正在取得位置…</div>
+  <div class="grid2">
+    <button class="btn" id="refreshBtn">🔄 重新定位</button>
+    <button class="btn" id="shareBtn">📤 分享位置</button>
+  </div>
+</div>
+
+<!-- SOS -->
+<button class="sos" id="sosBtn">SOS<small>傳送位置簡訊 → 撥打電話</small></button>
+<div class="grid2">
+  <button class="btn" id="smsOnly">💬 只傳簡訊</button>
+  <button class="btn call" id="callOnly">📞 只打電話</button>
+</div>
+
+<!-- 訊息內容 -->
+<div class="card" style="margin-top:12px">
+  <label>簡訊內容（位置連結會自動附在後面）</label>
+  <textarea id="msg">【緊急求救】我需要協助，請盡快聯絡我！我目前的位置：</textarea>
+</div>
+
+<!-- 快撥 -->
+<div class="card">
+  <label>公共緊急電話</label>
+  <div class="quick">
+    <a href="tel:119">119<small>消防／救護</small></a>
+    <a href="tel:110">110<small>報案</small></a>
+    <a href="tel:112">112<small>國際緊急</small></a>
+  </div>
+  <p class="hint">提醒：網頁無法同時自動「撥號＋送出簡訊」，系統會先開啟簡訊（請按「傳送」），回到此頁後再按綠色按鈕撥號。</p>
+</div>
+
+<div id="callBar">
+  <p>簡訊已開啟 — 傳送後按下方按鈕撥號</p>
+  <a id="callNowLink" href="#">📞 立即撥打</a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const KEY = 'sos_contacts_v1', SEL = 'sos_selected_v1', MSG = 'sos_msg_v1';
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  let pos = null;          // {lat,lng,acc,time}
+  let watchId = null;
+  let pendingCall = null;  // 簡訊開啟後待撥號碼
+
+  // ---------- 儲存（localStorage 可能不可用） ----------
+  const store = {
+    get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
+    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  };
+  let contacts = store.get(KEY, []);
+  let selected = store.get(SEL, contacts[0] || '');
+  $('msg').value = store.get(MSG, $('msg').value);
+  $('msg').addEventListener('input', () => store.set(MSG, $('msg').value));
+
+  const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('show');
+    clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2200); };
+  const clean = n => (n || '').replace(/[^\d+]/g, '');
+
+  function renderContacts(){
+    const box = $('contacts'); box.innerHTML = '';
+    contacts.forEach(n => {
+      const c = document.createElement('div');
+      c.className = 'chip' + (n === selected ? ' sel' : '');
+      c.innerHTML = `<span>${n}</span><b>✕</b>`;
+      c.querySelector('span').onclick = () => { selected = n; $('phone').value = n; store.set(SEL, n); renderContacts(); };
+      c.querySelector('b').onclick = () => {
+        contacts = contacts.filter(x => x !== n);
+        if (selected === n) selected = contacts[0] || '';
+        store.set(KEY, contacts); store.set(SEL, selected); renderContacts();
+      };
+      box.appendChild(c);
+    });
+    if (selected && !$('phone').value) $('phone').value = selected;
+  }
+
+  $('saveBtn').onclick = () => {
+    const n = clean($('phone').value);
+    if (n.length < 3) return toast('請輸入正確電話號碼');
+    if (!contacts.includes(n)) contacts.unshift(n);
+    selected = n; store.set(KEY, contacts); store.set(SEL, n);
+    renderContacts(); toast('已儲存 ' + n);
+  };
+
+  function currentNumber(){
+    const n = clean($('phone').value) || selected;
+    if (!n) { toast('請先輸入電話號碼'); $('phone').focus(); return null; }
+    return n;
+  }
+
+  // ---------- 定位 ----------
+  const mapsLink = () => pos ? `https://maps.google.com/?q=${pos.lat.toFixed(6)},${pos.lng.toFixed(6)}` : '';
+
+  function showMap(){
+    if (!pos) return;
+    $('map').src = `https://maps.google.com/maps?q=${pos.lat},${pos.lng}&z=17&hl=zh-TW&output=embed`;
+  }
+
+  function updateInfo(){
+    if (!pos) return;
+    const a = Math.round(pos.acc);
+    const cls = a <= 30 ? 'b-ok' : a <= 150 ? 'b-warn' : 'b-err';
+    const t = new Date(pos.time).toLocaleTimeString('zh-TW', {hour12:false});
+    $('locInfo').innerHTML =
+      `<strong>${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}</strong>
+       <span class="badge ${cls}">誤差約 ${a} 公尺</span><br>更新時間 ${t}`;
+  }
+
+  let lastMapPos = null;
+  function onPos(p){
+    pos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy, time: p.timestamp };
+    updateInfo();
+    // 只在移動超過 ~20m 或首次時刷新地圖，避免一直重載
+    if (!lastMapPos || Math.hypot(pos.lat - lastMapPos.lat, pos.lng - lastMapPos.lng) > 0.0002) {
+      lastMapPos = { ...pos }; showMap();
+    }
+  }
+  function onErr(e){
+    const m = { 1:'定位權限被拒絕，請到瀏覽器設定允許位置存取', 2:'無法取得位置訊號', 3:'定位逾時，請重試' };
+    if (!pos) $('locInfo').innerHTML = `<span class="badge b-err">${m[e.code] || '定位失敗'}</span>`;
+  }
+
+  function startWatch(){
+    if (!('geolocation' in navigator)) { $('locInfo').textContent = '此瀏覽器不支援定位'; return; }
+    if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    navigator.geolocation.getCurrentPosition(onPos, onErr, { enableHighAccuracy:true, timeout:15000, maximumAge:0 });
+    watchId = navigator.geolocation.watchPosition(onPos, onErr, { enableHighAccuracy:true, timeout:20000, maximumAge:5000 });
+  }
+
+  // 取得一次最新位置（最多等 6 秒，失敗就用現有位置）
+  function freshPos(){
+    return new Promise(res => {
+      if (!('geolocation' in navigator)) return res(pos);
+      let done = false;
+      const fin = () => { if (!done) { done = true; res(pos); } };
+      navigator.geolocation.getCurrentPosition(p => { onPos(p); fin(); }, fin,
+        { enableHighAccuracy:true, timeout:6000, maximumAge:10000 });
+      setTimeout(fin, 6500);
+    });
+  }
+
+  $('refreshBtn').onclick = () => { lastMapPos = null; $('locInfo').textContent = '重新定位中…'; startWatch(); };
+
+  // ---------- 簡訊 / 撥號 ----------
+  function smsBody(){
+    let b = $('msg').value.trim();
+    if (pos) b += `\n${mapsLink()}\n(誤差約${Math.round(pos.acc)}公尺)`;
+    else b += '\n(目前無法取得定位)';
+    return b;
+  }
+  function smsUrl(n){
+    return `sms:${n}${isIOS ? '&' : '?'}body=${encodeURIComponent(smsBody())}`;
+  }
+  const go = url => { window.location.href = url; };
+
+  async function sendSMS(n){
+    if (!pos) toast('定位中，稍候…');
+    await freshPos();
+    go(smsUrl(n));
+  }
+
+  $('sosBtn').onclick = async () => {
+    const n = currentNumber(); if (!n) return;
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    pendingCall = n;
+    $('callNowLink').href = 'tel:' + n;
+    $('callNowLink').textContent = '📞 立即撥打 ' + n;
+    $('callBar').style.display = 'block';
+    await sendSMS(n);
+  };
+  $('smsOnly').onclick = () => { const n = currentNumber(); if (n) sendSMS(n); };
+  $('callOnly').onclick = () => { const n = currentNumber(); if (n) go('tel:' + n); };
+  $('callNowLink').onclick = () => { setTimeout(() => { $('callBar').style.display = 'none'; pendingCall = null; }, 1500); };
+
+  // 從簡訊 App 回到此頁時，提示撥號
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && pendingCall) {
+      if (navigator.vibrate) navigator.vibrate(150);
+      toast('請按下方按鈕撥號');
+    }
+  });
+
+  // ---------- 分享 ----------
+  $('shareBtn').onclick = async () => {
+    await freshPos();
+    if (!pos) return toast('尚未取得位置');
+    const text = smsBody();
+    if (navigator.share) {
+      try { await navigator.share({ title:'我的位置', text }); } catch(e) {}
+    } else if (navigator.clipboard) {
+      try { await navigator.clipboard.writeText(text); toast('已複製位置訊息'); } catch(e) { toast(mapsLink()); }
+    } else toast(mapsLink());
+  };
+
+  renderContacts();
+  startWatch();
+})();
+</script>
+</body>
+</html>
