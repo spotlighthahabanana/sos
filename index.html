@@ -5,163 +5,254 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="緊急求救">
-<meta name="theme-color" content="#b91c1c">
+<meta name="theme-color" content="#0b0b0d">
 <title>緊急求救 SOS</title>
 <style>
-  :root{
-    --red:#dc2626; --red-d:#991b1b; --bg:#0f0f10; --card:#1b1b1e; --line:#2c2c31;
-    --txt:#f4f4f5; --mute:#a1a1aa; --ok:#16a34a; --warn:#f59e0b;
-  }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;background:var(--bg);color:var(--txt);
-    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
-  body{padding:max(14px,env(safe-area-inset-top)) 14px max(20px,env(safe-area-inset-bottom))}
-  h1{font-size:20px;margin:4px 0 12px;display:flex;align-items:center;gap:8px}
-  h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 0 0 rgba(220,38,38,.7);animation:pulse 1.6s infinite}
-  @keyframes pulse{70%{box-shadow:0 0 0 10px rgba(220,38,38,0)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
-  label{font-size:13px;color:var(--mute);display:block;margin-bottom:6px}
-  .row{display:flex;gap:8px}
-  input,textarea{width:100%;background:#0b0b0c;color:var(--txt);border:1px solid var(--line);
-    border-radius:12px;padding:12px;font-size:18px;outline:none}
-  input:focus,textarea:focus{border-color:var(--red)}
-  textarea{font-size:15px;resize:vertical;min-height:64px}
-  button{font:inherit;border:0;border-radius:12px;cursor:pointer;color:#fff}
-  .btn-sm{background:#2c2c31;padding:0 14px;font-size:15px;white-space:nowrap}
-  .contacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-  .chip{display:flex;align-items:center;background:#26262b;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-  .chip.sel{border-color:var(--red);background:#3a1515}
-  .chip span{padding:8px 4px 8px 12px;font-size:15px}
-  .chip b{padding:8px 12px;color:var(--mute);font-weight:400}
-  #map{width:100%;height:260px;border:0;border-radius:12px;background:#222;display:block}
-  .loc{font-size:13px;color:var(--mute);margin-top:8px;line-height:1.5;word-break:break-all}
-  .loc strong{color:var(--txt)}
-  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;margin-left:4px}
-  .b-ok{background:rgba(22,163,74,.2);color:#4ade80}
-  .b-warn{background:rgba(245,158,11,.2);color:#fbbf24}
-  .b-err{background:rgba(220,38,38,.2);color:#f87171}
-  .sos{width:100%;height:120px;font-size:30px;font-weight:800;letter-spacing:2px;
-    background:radial-gradient(circle at 50% 30%,#ef4444,var(--red-d));border-radius:20px;
-    box-shadow:0 8px 30px rgba(220,38,38,.35)}
-  .sos small{display:block;font-size:14px;font-weight:400;letter-spacing:0;opacity:.85;margin-top:4px}
-  .sos:active{transform:scale(.98)}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-  .btn{padding:14px 8px;font-size:16px;background:#2c2c31}
-  .btn.call{background:var(--ok)}
-  .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .quick a{display:block;text-align:center;text-decoration:none;color:#fff;background:#2c2c31;
-    border-radius:12px;padding:12px 4px;font-size:22px;font-weight:700}
-  .quick a small{display:block;font-size:12px;font-weight:400;color:var(--mute)}
-  #callBar{position:fixed;left:0;right:0;bottom:0;padding:14px 14px max(14px,env(safe-area-inset-bottom));
-    background:#0f0f10ee;border-top:1px solid var(--line);display:none;backdrop-filter:blur(8px)}
-  #callBar a{display:block;text-align:center;background:var(--ok);color:#fff;text-decoration:none;
-    font-size:24px;font-weight:800;padding:20px;border-radius:16px}
-  #callBar p{margin:0 0 8px;text-align:center;color:var(--mute);font-size:14px}
-  .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#27272a;color:#fff;
-    padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:9}
-  .toast.show{opacity:1}
-  .hint{font-size:12px;color:var(--mute);line-height:1.6;margin:6px 2px 0}
-  .scen{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .scen button{background:#2a1a1a;border:1px solid #4a2323;padding:16px 6px;font-size:17px;font-weight:700}
-  .scen button small{display:block;font-size:12px;font-weight:400;color:var(--mute);margin-top:2px}
-  #wiz{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:flex-end;z-index:8}
-  #wiz .sheet{width:100%;background:var(--card);border-radius:20px 20px 0 0;
-    padding:18px 14px max(18px,env(safe-area-inset-bottom));border-top:1px solid var(--line)}
-  #wiz h2{margin:0 0 4px;font-size:22px}
-  #wiz .q{color:var(--mute);margin:0 0 14px;font-size:15px}
-  #wiz .opts{display:flex;flex-direction:column;gap:10px}
-  #wiz .opts button{padding:20px 14px;font-size:20px;font-weight:700;text-align:left;background:#2c2c31}
-  #wiz .opts button.hot{background:var(--red)}
-  #wiz .opts button small{display:block;font-size:13px;font-weight:400;opacity:.8;margin-top:4px}
-  #wiz .cancel{margin-top:12px;width:100%;padding:14px;background:transparent;color:var(--mute);font-size:16px}
-  #callBar .two{display:grid;grid-template-columns:1fr;gap:8px}
-  #callBar a.alt{background:#2c2c31;font-size:18px;padding:14px}
+:root{
+  --bg:#0b0b0d; --s1:#151518; --s2:#1d1d21; --s3:#26262b;
+  --line:rgba(255,255,255,.07); --txt:#f2f2f3; --mute:#8b8b93; --dim:#5e5e66;
+  --red:#e5484d; --red-s:rgba(229,72,77,.12); --green:#2fb36b; --amber:#f5a524;
+  --r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
+html,body{background:var(--bg);color:var(--txt)}
+body{
+  font:15px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 132px);
+  -webkit-user-select:none;user-select:none;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,textarea{font:inherit;color:var(--txt);-webkit-user-select:text;user-select:text}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.num{font-variant-numeric:tabular-nums;font-family:"SF Mono",ui-monospace,Menlo,monospace;letter-spacing:-.01em}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.top h1{font-size:20px;font-weight:700;letter-spacing:.02em}
+.iconbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--s1);border:1px solid var(--line);color:var(--mute)}
+.iconbtn:active{background:var(--s2)}
+
+/* status */
+.status{display:flex;gap:8px;margin-bottom:12px}
+.chip{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:var(--s1);border:1px solid var(--line);font-size:13px;color:var(--mute);text-align:left}
+.chip b{color:var(--txt);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip svg.i{width:16px;height:16px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex:none}
+.dot.ok{background:var(--green);box-shadow:0 0 0 3px rgba(47,179,107,.18)}
+.dot.mid{background:var(--amber);box-shadow:0 0 0 3px rgba(245,165,36,.18)}
+.dot.bad{background:var(--red);box-shadow:0 0 0 3px var(--red-s)}
+.dot.wait{animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.25}}
+.chip.warn{color:var(--amber);border-color:rgba(245,165,36,.25)}
+
+/* map */
+.map{position:relative;height:188px;border-radius:var(--r);overflow:hidden;background:var(--s1);border:1px solid var(--line);margin-bottom:22px}
+.map iframe{position:absolute;inset:0;width:100%;height:100%;border:0;filter:grayscale(.15) contrast(1.02);opacity:0;transition:opacity .4s}
+.map.on iframe{opacity:1}
+.map .ph{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:10px;color:var(--mute);font-size:13px}
+.map.on .ph{display:none}
+.pulse{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--txt);background:var(--s2);position:relative}
+.pulse::after{content:"";position:absolute;inset:0;border-radius:50%;border:1px solid var(--mute);animation:ring 1.8s infinite}
+@keyframes ring{from{transform:scale(1);opacity:.6}to{transform:scale(1.9);opacity:0}}
+.map .coord{position:absolute;left:10px;bottom:10px;padding:6px 10px;border-radius:10px;background:rgba(11,11,13,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:12px;color:var(--txt);display:none}
+.map.on .coord{display:block}
+.map .tools{position:absolute;right:10px;top:10px;display:flex;gap:6px}
+.map .tools button{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(11,11,13,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--txt)}
+.map .tools svg.i{width:17px;height:17px}
+
+/* scenarios */
+.label{font-size:13px;color:var(--mute);margin:0 2px 10px;display:flex;justify-content:space-between}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:14px;padding:14px 12px 12px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);text-align:left;transition:transform .12s,background .12s}
+.tile:active{transform:scale(.97);background:var(--s2)}
+.tile svg.i{color:var(--txt)}
+.tile .t{font-size:15px;font-weight:600;line-height:1.2}
+.tile .s{font-size:12px;color:var(--mute);margin-top:2px}
+
+/* SOS hold button */
+.dock{position:fixed;left:0;right:0;bottom:0;padding:14px 16px calc(env(safe-area-inset-bottom) + 14px);background:linear-gradient(to top,var(--bg) 70%,rgba(11,11,13,0));z-index:5}
+.sos{position:relative;width:100%;height:76px;border-radius:20px;background:var(--red);overflow:hidden;color:#fff;display:flex;align-items:center;justify-content:center;gap:14px;touch-action:none}
+.sos .fill{position:absolute;inset:0;background:rgba(0,0,0,.22);transform-origin:left;transform:scaleX(0)}
+.sos.holding .fill{transform:scaleX(1);transition:transform 1.5s linear}
+.sos .txt{position:relative;text-align:left;line-height:1.25}
+.sos .txt b{display:block;font-size:19px;font-weight:700;letter-spacing:.04em}
+.sos .txt span{font-size:12px;opacity:.85}
+.sos .badge{position:relative;font-weight:800;font-size:13px;letter-spacing:.12em;border:1.5px solid rgba(255,255,255,.75);border-radius:999px;padding:5px 10px}
+
+/* sheets */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .2s;z-index:8}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;background:var(--s1);border-radius:22px 22px 0 0;border-top:1px solid var(--line);padding:10px 16px calc(env(safe-area-inset-bottom) + 18px);transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);z-index:9}
+.sheet.on{transform:none}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--s3);margin:0 auto 14px}
+.sheet h2{font-size:20px;font-weight:700;display:flex;align-items:center;gap:10px}
+.sheet .q{color:var(--mute);margin:4px 0 16px}
+.opt{width:100%;display:flex;align-items:center;gap:12px;padding:16px;border-radius:14px;background:var(--s2);border:1px solid var(--line);text-align:left;margin-bottom:8px}
+.opt:active{background:var(--s3)}
+.opt.hot{background:var(--red-s);border-color:rgba(229,72,77,.35)}
+.opt .t{font-size:17px;font-weight:600}
+.opt .s{font-size:13px;color:var(--mute);margin-top:2px}
+.opt .tag{margin-left:auto;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--s3);white-space:nowrap}
+.opt.hot .tag{background:var(--red);color:#fff}
+.ghost{width:100%;padding:14px;color:var(--mute);margin-top:4px}
+
+/* settings */
+.field{margin-bottom:18px}
+.field > .label{margin-bottom:8px}
+.row{display:flex;gap:8px}
+.in{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-size:17px;outline:none}
+.in:focus{border-color:rgba(255,255,255,.25)}
+textarea.in{font-size:15px;min-height:84px;resize:vertical}
+.btn{padding:0 18px;border-radius:12px;background:var(--txt);color:var(--bg);font-weight:600;white-space:nowrap}
+.btn2{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:12px;background:var(--s2);border:1px solid var(--line);font-weight:600}
+.btn2 svg.i{width:18px;height:18px}
+.contacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ct{display:flex;align-items:center;border-radius:999px;background:var(--s2);border:1px solid var(--line);font-size:14px}
+.ct.sel{border-color:rgba(255,255,255,.4)}
+.ct span{padding:7px 4px 7px 12px}
+.ct button{padding:7px 10px;color:var(--mute)}
+.ct button svg.i{width:14px;height:14px}
+.pub{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pub a{display:block;text-decoration:none;color:var(--txt);text-align:center;padding:12px 4px;border-radius:12px;background:var(--s2);border:1px solid var(--line)}
+.pub a b{display:block;font-size:20px;font-weight:700}
+.pub a span{font-size:12px;color:var(--mute)}
+.note{font-size:12px;color:var(--dim);line-height:1.6;margin-top:6px}
+
+/* next-step call panel */
+.next .callbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;color:#fff;background:var(--green);border-radius:16px;padding:20px;font-size:19px;font-weight:700;margin-bottom:8px}
+.next .callbtn.alt{background:var(--s2);border:1px solid var(--line);color:var(--txt);font-size:16px;padding:15px}
+.steps{display:flex;gap:8px;margin:2px 0 16px}
+.steps div{flex:1;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);padding:10px 12px;border-radius:12px;background:var(--s2)}
+.steps div.done{color:var(--txt)}
+.steps i{font-style:normal;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;background:var(--s3)}
+.steps .done i{background:var(--green);color:#fff}
+
+.toast{position:fixed;top:calc(env(safe-area-inset-top) + 12px);left:50%;transform:translate(-50%,-8px);background:var(--txt);color:var(--bg);font-size:14px;font-weight:600;padding:10px 16px;border-radius:999px;opacity:0;transition:.25s;pointer-events:none;z-index:20;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
 </style>
 </head>
 <body>
 
-<h1><span class="dot"></span>緊急求救</h1>
+<header class="top">
+  <h1>緊急求救</h1>
+  <button class="iconbtn" id="openSet" aria-label="設定" data-i="sliders"></button>
+</header>
 
-<!-- 聯絡人 -->
-<div class="card">
-  <label>緊急聯絡人電話</label>
-  <div class="row">
-    <input id="phone" type="tel" inputmode="tel" placeholder="例：0912345678" autocomplete="tel">
-    <button class="btn-sm" id="saveBtn">儲存</button>
-  </div>
-  <div class="contacts" id="contacts"></div>
+<div class="status">
+  <div class="chip" id="locChip"><span class="dot wait" id="locDot"></span><span>定位</span><b id="locTxt">取得中</b></div>
+  <button class="chip" id="ctChip"><span data-i="user"></span><b id="ctTxt">未設定聯絡人</b></button>
 </div>
 
-<!-- 情境快選 -->
-<div class="card">
-  <label>情境快選（選完自動傳位置簡訊並撥號）</label>
-  <div class="scen" id="scen"></div>
-</div>
-
-<!-- 地圖 -->
-<div class="card">
-  <iframe id="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="目前位置"></iframe>
-  <div class="loc" id="locInfo">正在取得位置…</div>
-  <div class="grid2">
-    <button class="btn" id="refreshBtn">🔄 重新定位</button>
-    <button class="btn" id="shareBtn">📤 分享位置</button>
+<div class="map" id="map">
+  <iframe id="mapFrame" title="目前位置" referrerpolicy="no-referrer-when-downgrade"></iframe>
+  <div class="ph" id="mapPh"><div class="pulse" data-i="pin"></div><span id="mapMsg">正在取得你的位置</span></div>
+  <div class="coord num" id="coord"></div>
+  <div class="tools">
+    <button id="refreshBtn" aria-label="重新定位" data-i="refresh"></button>
+    <button id="shareBtn" aria-label="分享位置" data-i="share"></button>
   </div>
 </div>
 
-<!-- SOS -->
-<button class="sos" id="sosBtn">SOS<small>傳送位置簡訊 → 撥打電話</small></button>
-<div class="grid2">
-  <button class="btn" id="smsOnly">💬 只傳簡訊</button>
-  <button class="btn call" id="callOnly">📞 只打電話</button>
+<div class="label"><span>選擇情況</span><span>自動傳位置並撥號</span></div>
+<div class="grid" id="scen"></div>
+
+<div class="dock">
+  <button class="sos" id="sosBtn">
+    <span class="fill"></span>
+    <span class="badge">SOS</span>
+    <span class="txt"><b>按住 2 秒求救</b><span>傳位置給聯絡人並撥號</span></span>
+  </button>
 </div>
 
-<!-- 訊息內容 -->
-<div class="card" style="margin-top:12px">
-  <label>簡訊內容（位置連結會自動附在後面）</label>
-  <textarea id="msg">【緊急求救】我需要協助，請盡快聯絡我！我目前的位置：</textarea>
-</div>
+<div class="scrim" id="scrim"></div>
 
-<!-- 快撥 -->
-<div class="card">
-  <label>公共緊急電話</label>
-  <div class="quick">
-    <a href="tel:119">119<small>消防／救護</small></a>
-    <a href="tel:110">110<small>報案</small></a>
-    <a href="tel:112">112<small>國際緊急</small></a>
-  </div>
-  <p class="hint">提醒：網頁無法同時自動「撥號＋送出簡訊」，系統會先開啟簡訊（請按「傳送」），回到此頁後再按綠色按鈕撥號。</p>
-</div>
-
-<div id="callBar">
-  <p id="callBarTip">簡訊已開啟 — 傳送後按下方按鈕撥號</p>
-  <div class="two">
-    <a id="callNowLink" href="#">📞 立即撥打</a>
-    <a id="callAltLink" class="alt" href="#" style="display:none"></a>
-  </div>
-</div>
-
-<div id="wiz"><div class="sheet">
+<!-- 情境提問 -->
+<section class="sheet" id="wiz">
+  <div class="grab"></div>
   <h2 id="wizTitle"></h2>
   <p class="q" id="wizQ"></p>
-  <div class="opts" id="wizOpts"></div>
-  <button class="cancel" id="wizCancel">取消</button>
-</div></div>
+  <div id="wizOpts"></div>
+  <button class="ghost" data-close>取消</button>
+</section>
+
+<!-- 下一步：撥號 -->
+<section class="sheet next" id="next">
+  <div class="grab"></div>
+  <h2 id="nextTitle">下一步：撥打電話</h2>
+  <p class="q" id="nextQ">簡訊已開啟，按「傳送」後回到這裡。</p>
+  <div class="steps" id="steps"><div class="done"><i>✓</i>傳送位置簡訊</div><div><i>2</i>撥打電話</div></div>
+  <a class="callbtn" id="callMain" href="#"></a>
+  <a class="callbtn alt" id="callAlt" href="#"></a>
+  <button class="ghost" data-close>完成</button>
+</section>
+
+<!-- 設定 -->
+<section class="sheet" id="set">
+  <div class="grab"></div>
+  <h2 style="margin-bottom:18px">設定</h2>
+  <div class="field">
+    <div class="label"><span>緊急聯絡人</span></div>
+    <div class="row">
+      <input class="in num" id="phone" type="tel" inputmode="tel" placeholder="0912 345 678" autocomplete="tel">
+      <button class="btn" id="saveBtn">儲存</button>
+    </div>
+    <div class="contacts" id="contacts"></div>
+  </div>
+  <div class="field">
+    <div class="label"><span>SOS 簡訊內容</span><span>位置會自動附上</span></div>
+    <textarea class="in" id="msg">【緊急求救】我需要協助，請盡快聯絡我！我目前的位置：</textarea>
+  </div>
+  <div class="field">
+    <div class="label"><span>快速動作</span></div>
+    <div class="row">
+      <button class="btn2" id="smsOnly"><span data-i="msg"></span>只傳簡訊</button>
+      <button class="btn2" id="callOnly"><span data-i="phone"></span>只打電話</button>
+    </div>
+  </div>
+  <div class="field">
+    <div class="label"><span>公共緊急電話</span></div>
+    <div class="pub">
+      <a href="tel:119"><b class="num">119</b><span>消防・救護</span></a>
+      <a href="tel:110"><b class="num">110</b><span>報案</span></a>
+      <a href="tel:112"><b class="num">112</b><span>國際緊急</span></a>
+    </div>
+    <p class="note">網頁無法替你直接送出簡訊或撥號：系統會先開啟簡訊（請按「傳送」），回到此頁再按撥號。</p>
+  </div>
+  <button class="ghost" data-close>關閉</button>
+</section>
 
 <div class="toast" id="toast"></div>
 
 <script>
 (() => {
   const $ = id => document.getElementById(id);
+
+  // ---------- 圖示 ----------
+  const P = {
+    car:'<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
+    heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>',
+    flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+    shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+    compass:'<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/>',
+    check:'<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+    sliders:'<path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
+    refresh:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+    share:'<path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/>',
+    phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
+    msg:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+    user:'<circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/>',
+    x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
+  };
+  const ico = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
+  document.querySelectorAll('[data-i]').forEach(el => el.insertAdjacentHTML('beforeend', ico(el.dataset.i)));
+
+  // ---------- 儲存 ----------
   const KEY = 'sos_contacts_v1', SEL = 'sos_selected_v1', MSG = 'sos_msg_v1';
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-  let pos = null;          // {lat,lng,acc,time}
-  let watchId = null;
-  let pendingCall = null;  // 簡訊開啟後待撥號碼
-
-  // ---------- 儲存（localStorage 可能不可用） ----------
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const store = {
     get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
     set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
@@ -174,222 +265,212 @@
   const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('show');
     clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2200); };
   const clean = n => (n || '').replace(/[^\d+]/g, '');
+  const fmt = n => n.length === 10 && n.startsWith('09') ? `${n.slice(0,4)} ${n.slice(4,7)} ${n.slice(7)}` : n;
+  const contactNum = () => clean($('phone').value) || selected;
 
+  // ---------- 面板 ----------
+  let openSheet = null, pendingCall = null;
+  function show(id){ hide(true); openSheet = $(id); openSheet.classList.add('on'); $('scrim').classList.add('on'); }
+  function hide(silent){
+    if (openSheet) openSheet.classList.remove('on');
+    $('scrim').classList.remove('on');
+    if (!silent && openSheet && openSheet.id === 'next') pendingCall = null;
+    openSheet = null;
+  }
+  $('scrim').onclick = () => hide();
+  document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => hide());
+  $('openSet').onclick = () => show('set');
+  $('ctChip').onclick = () => show('set');
+
+  // ---------- 聯絡人 ----------
   function renderContacts(){
     const box = $('contacts'); box.innerHTML = '';
     contacts.forEach(n => {
       const c = document.createElement('div');
-      c.className = 'chip' + (n === selected ? ' sel' : '');
-      c.innerHTML = `<span>${n}</span><b>✕</b>`;
+      c.className = 'ct' + (n === selected ? ' sel' : '');
+      c.innerHTML = `<span class="num">${fmt(n)}</span><button aria-label="刪除">${ico('x')}</button>`;
       c.querySelector('span').onclick = () => { selected = n; $('phone').value = n; store.set(SEL, n); renderContacts(); };
-      c.querySelector('b').onclick = () => {
+      c.querySelector('button').onclick = () => {
         contacts = contacts.filter(x => x !== n);
-        if (selected === n) selected = contacts[0] || '';
+        if (selected === n) { selected = contacts[0] || ''; $('phone').value = selected; }
         store.set(KEY, contacts); store.set(SEL, selected); renderContacts();
       };
       box.appendChild(c);
     });
     if (selected && !$('phone').value) $('phone').value = selected;
+    const n = contactNum();
+    $('ctTxt').textContent = n ? fmt(n) : '設定聯絡人';
+    $('ctTxt').className = n ? 'num' : '';
+    $('ctChip').classList.toggle('warn', !n);
   }
-
   $('saveBtn').onclick = () => {
     const n = clean($('phone').value);
     if (n.length < 3) return toast('請輸入正確電話號碼');
     if (!contacts.includes(n)) contacts.unshift(n);
     selected = n; store.set(KEY, contacts); store.set(SEL, n);
-    renderContacts(); toast('已儲存 ' + n);
+    renderContacts(); toast('已儲存聯絡人');
   };
 
-  function currentNumber(){
-    const n = clean($('phone').value) || selected;
-    if (!n) { toast('請先輸入電話號碼'); $('phone').focus(); return null; }
-    return n;
-  }
-
   // ---------- 定位 ----------
+  let pos = null, watchId = null, lastMap = null;
   const mapsLink = () => pos ? `https://maps.google.com/?q=${pos.lat.toFixed(6)},${pos.lng.toFixed(6)}` : '';
-
-  function showMap(){
-    if (!pos) return;
-    $('map').src = `https://maps.google.com/maps?q=${pos.lat},${pos.lng}&z=17&hl=zh-TW&output=embed`;
-  }
-
-  function updateInfo(){
-    if (!pos) return;
-    const a = Math.round(pos.acc);
-    const cls = a <= 30 ? 'b-ok' : a <= 150 ? 'b-warn' : 'b-err';
-    const t = new Date(pos.time).toLocaleTimeString('zh-TW', {hour12:false});
-    $('locInfo').innerHTML =
-      `<strong>${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}</strong>
-       <span class="badge ${cls}">誤差約 ${a} 公尺</span><br>更新時間 ${t}`;
-  }
-
-  let lastMapPos = null;
   function onPos(p){
-    pos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy, time: p.timestamp };
-    updateInfo();
-    // 只在移動超過 ~20m 或首次時刷新地圖，避免一直重載
-    if (!lastMapPos || Math.hypot(pos.lat - lastMapPos.lat, pos.lng - lastMapPos.lng) > 0.0002) {
-      lastMapPos = { ...pos }; showMap();
+    pos = { lat:p.coords.latitude, lng:p.coords.longitude, acc:p.coords.accuracy, time:Date.now() };
+    const a = Math.round(pos.acc);
+    $('locDot').className = 'dot ' + (a <= 30 ? 'ok' : a <= 150 ? 'mid' : 'bad');
+    $('locTxt').textContent = `±${a} m`; $('locTxt').className = 'num';
+    $('coord').textContent = `${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}`;
+    if (!lastMap || Math.hypot(pos.lat - lastMap.lat, pos.lng - lastMap.lng) > 0.0002) {
+      lastMap = { ...pos };
+      $('mapFrame').src = `https://maps.google.com/maps?q=${pos.lat},${pos.lng}&z=17&hl=zh-TW&output=embed`;
+      $('map').classList.add('on');
     }
   }
   function onErr(e){
-    const m = { 1:'定位權限被拒絕，請到瀏覽器設定允許位置存取', 2:'無法取得位置訊號', 3:'定位逾時，請重試' };
-    if (!pos) $('locInfo').innerHTML = `<span class="badge b-err">${m[e.code] || '定位失敗'}</span>`;
+    if (pos) return;
+    const m = { 1:'未允許定位，請到瀏覽器設定開啟', 2:'收不到定位訊號', 3:'定位逾時，請重試' };
+    $('locDot').className = 'dot bad'; $('locTxt').textContent = '無法定位'; $('locTxt').className = '';
+    $('mapMsg').textContent = m[e.code] || '定位失敗';
   }
-
   function startWatch(){
-    if (!('geolocation' in navigator)) { $('locInfo').textContent = '此瀏覽器不支援定位'; return; }
+    if (!('geolocation' in navigator)) { onErr({code:0}); return; }
     if (watchId !== null) navigator.geolocation.clearWatch(watchId);
     navigator.geolocation.getCurrentPosition(onPos, onErr, { enableHighAccuracy:true, timeout:15000, maximumAge:0 });
     watchId = navigator.geolocation.watchPosition(onPos, onErr, { enableHighAccuracy:true, timeout:20000, maximumAge:5000 });
   }
-
-  // 取得一次最新位置（最多等 6 秒，失敗就用現有位置）
+  // 位置夠新就直接用；否則最多等 4 秒
   function freshPos(){
+    if (pos && Date.now() - pos.time < 60000) return Promise.resolve(pos);
     return new Promise(res => {
       if (!('geolocation' in navigator)) return res(pos);
-      let done = false;
-      const fin = () => { if (!done) { done = true; res(pos); } };
-      navigator.geolocation.getCurrentPosition(p => { onPos(p); fin(); }, fin,
-        { enableHighAccuracy:true, timeout:6000, maximumAge:10000 });
-      setTimeout(fin, 6500);
+      let done = false; const fin = () => { if (!done) { done = true; res(pos); } };
+      navigator.geolocation.getCurrentPosition(p => { onPos(p); fin(); }, fin, { enableHighAccuracy:true, timeout:4000, maximumAge:10000 });
+      setTimeout(fin, 4200);
     });
   }
-
-  $('refreshBtn').onclick = () => { lastMapPos = null; $('locInfo').textContent = '重新定位中…'; startWatch(); };
+  $('refreshBtn').onclick = () => { lastMap = null; $('locDot').className = 'dot wait'; $('locTxt').textContent = '取得中'; startWatch(); };
 
   // ---------- 簡訊 / 撥號 ----------
   function smsBody(prefix){
     let b = (prefix || $('msg').value).trim();
-    if (pos) b += `\n${mapsLink()}\n(誤差約${Math.round(pos.acc)}公尺)`;
-    else b += '\n(目前無法取得定位)';
+    b += pos ? `\n${mapsLink()}\n(誤差約${Math.round(pos.acc)}公尺)` : '\n(目前無法取得定位)';
     return b;
   }
-  function smsUrl(n, prefix){
-    return `sms:${n}${isIOS ? '&' : '?'}body=${encodeURIComponent(smsBody(prefix))}`;
-  }
   const go = url => { window.location.href = url; };
-
   async function sendSMS(n, prefix){
-    if (!pos) toast('定位中，稍候…');
+    if (!pos) toast('定位中…');
     await freshPos();
-    go(smsUrl(n, prefix));
+    go(`sms:${n}${isIOS ? '&' : '?'}body=${encodeURIComponent(smsBody(prefix))}`);
   }
 
-  const hideBar = () => { $('callBar').style.display = 'none'; pendingCall = null; };
-  function showCallBar(callNum, label, altNum, tip){
-    pendingCall = callNum || altNum;
-    $('callBarTip').textContent = tip || '簡訊已開啟 — 傳送後按下方按鈕撥號';
-    const main = $('callNowLink'), alt = $('callAltLink');
-    if (callNum) {
-      main.style.display = 'block';
-      main.href = 'tel:' + callNum;
-      main.textContent = '📞 立即撥打 ' + (label || callNum);
-    } else main.style.display = 'none';
-    if (altNum && altNum !== callNum) {
-      alt.style.display = 'block'; alt.href = 'tel:' + altNum; alt.textContent = '📞 撥給聯絡人 ' + altNum;
-    } else alt.style.display = 'none';
-    $('callBar').style.display = 'block';
+  function showNext({ callNum, label, altNum, smsOnly }){
+    const main = $('callMain'), alt = $('callAlt');
+    if (smsOnly) {
+      $('nextTitle').textContent = '簡訊已開啟';
+      $('nextQ').textContent = '請在簡訊中按「傳送」。';
+      $('steps').style.display = 'none'; main.style.display = 'none'; alt.style.display = 'none';
+      pendingCall = null;
+    } else {
+      $('nextTitle').textContent = '下一步：撥打電話';
+      $('nextQ').textContent = '簡訊已開啟，按「傳送」後回到這裡。';
+      $('steps').style.display = '';
+      main.style.display = 'flex'; main.href = 'tel:' + callNum;
+      main.innerHTML = `${ico('phone')}撥打 <span class="num">${label || fmt(callNum)}</span>`;
+      if (altNum && altNum !== callNum) {
+        alt.style.display = 'flex'; alt.href = 'tel:' + altNum;
+        alt.innerHTML = `${ico('user')}改撥聯絡人 <span class="num">${fmt(altNum)}</span>`;
+      } else alt.style.display = 'none';
+      pendingCall = callNum;
+    }
+    show('next');
   }
+  $('callMain').addEventListener('click', () => setTimeout(() => hide(), 1200));
+  $('callAlt').addEventListener('click', () => setTimeout(() => hide(), 1200));
 
-  // 通用執行：先傳簡訊給聯絡人，再撥 call（119 / 110 / 'contact' / null）
+  // 通用：先傳簡訊給聯絡人，再提示撥號（call: '119' / '110' / 'contact'）
   async function runAction({ msg, call, label, smsOnly }){
     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-    const contact = clean($('phone').value) || selected;
+    const contact = contactNum();
     const callNum = call === 'contact' ? contact : call;
-    if (call === 'contact' && !contact) { toast('請先輸入緊急聯絡人電話'); $('phone').focus(); return; }
-
-    if (!contact) {            // 沒有聯絡人：無法傳簡訊，直接撥號
-      if (callNum) { toast('未設定聯絡人，直接撥號'); go('tel:' + callNum); }
-      else toast('請先輸入緊急聯絡人電話');
-      return;
-    }
-    if (smsOnly) {
-      showCallBar(null, null, null, '簡訊已開啟 — 請按「傳送」');
-      setTimeout(hideBar, 8000);
-    } else {
-      showCallBar(callNum, label, (call === '119' || call === '110') ? contact : null);
-    }
+    if ((call === 'contact' || smsOnly) && !contact) { toast('請先設定緊急聯絡人'); show('set'); return; }
+    if (!contact) { toast('未設定聯絡人，直接撥號'); go('tel:' + callNum); return; }
+    showNext({ callNum, label, altNum: (call === '119' || call === '110') ? contact : null, smsOnly });
     await sendSMS(contact, msg);
   }
 
-  $('sosBtn').onclick = () => {
-    const n = currentNumber(); if (!n) return;
-    runAction({ call: 'contact' });
-  };
-  $('smsOnly').onclick = () => { const n = currentNumber(); if (n) sendSMS(n); };
-  $('callOnly').onclick = () => { const n = currentNumber(); if (n) go('tel:' + n); };
-  $('callNowLink').onclick = () => setTimeout(hideBar, 1500);
-  $('callAltLink').onclick = () => setTimeout(hideBar, 1500);
+  $('smsOnly').onclick = () => { const n = contactNum(); if (!n) return toast('請先輸入聯絡人'); sendSMS(n); };
+  $('callOnly').onclick = () => { const n = contactNum(); if (!n) return toast('請先輸入聯絡人'); go('tel:' + n); };
 
-  // ---------- 情境快選 ----------
+  // ---------- SOS 長按 ----------
+  const sos = $('sosBtn'); let holdT = null;
+  const cancelHold = () => { clearTimeout(holdT); sos.classList.remove('holding'); };
+  sos.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    if (!contactNum()) { toast('請先設定緊急聯絡人'); show('set'); return; }
+    sos.classList.add('holding');
+    if (navigator.vibrate) navigator.vibrate(20);
+    holdT = setTimeout(() => { cancelHold(); runAction({ call:'contact' }); }, 1500);
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(ev => sos.addEventListener(ev, cancelHold));
+  sos.addEventListener('contextmenu', e => e.preventDefault());
+
+  // ---------- 情境 ----------
   const SCENARIOS = [
-    { icon:'🚗', name:'車禍', sub:'119 / 110', q:'有沒有人受傷？', opts:[
-      { t:'有人受傷', s:'撥打 119 叫救護車', hot:true, call:'119', label:'119 救護',
+    { i:'car', name:'車禍', sub:'119 / 110', q:'有沒有人受傷？', opts:[
+      { t:'有人受傷', s:'叫救護車', hot:true, call:'119', label:'119',
         msg:'【緊急】我發生車禍，有人受傷，正在撥打119。請盡快聯絡我！我的位置：' },
-      { t:'沒有人受傷', s:'撥打 110 報警處理', call:'110', label:'110 報警',
-        msg:'【通知】我發生車禍，沒有人受傷，正在報警處理。我的位置：' }
-    ]},
-    { icon:'🩺', name:'急病／受傷', sub:'119', q:'當事人的狀況？', opts:[
-      { t:'昏倒、意識不清或呼吸困難', s:'撥打 119', hot:true, call:'119', label:'119 救護',
+      { t:'沒有人受傷', s:'報警處理', call:'110', label:'110',
+        msg:'【通知】我發生車禍，沒有人受傷，正在報警處理。我的位置：' } ]},
+    { i:'heart', name:'急病受傷', sub:'119', q:'當事人目前的狀況？', opts:[
+      { t:'昏倒、意識不清、呼吸困難', s:'叫救護車', hot:true, call:'119', label:'119',
         msg:'【緊急】有人昏倒／意識不清或呼吸困難，正在叫救護車(119)。請盡快聯絡我！位置：' },
-      { t:'清醒，但需要立即就醫', s:'撥打 119', call:'119', label:'119 救護',
+      { t:'清醒，但需要立即就醫', s:'叫救護車', call:'119', label:'119',
         msg:'【緊急】我身體不適需要就醫，正在叫救護車(119)。我的位置：' },
-      { t:'還可以，請人來接我', s:'撥給緊急聯絡人', call:'contact',
-        msg:'我身體不太舒服，請來接我。我的位置：' }
-    ]},
-    { icon:'🔥', name:'火災', sub:'119', direct:
-      { call:'119', label:'119 消防', msg:'【緊急】這裡發生火災，我正在撥打119！我的位置：' } },
-    { icon:'⚠️', name:'人身危險', sub:'110', q:'你方便出聲講電話嗎？', opts:[
-      { t:'可以講電話', s:'撥打 110 報警', hot:true, call:'110', label:'110 報警',
+      { t:'還可以，請人來接我', s:'通知聯絡人', call:'contact', tag:'聯絡人',
+        msg:'我身體不太舒服，請來接我。我的位置：' } ]},
+    { i:'flame', name:'火災', sub:'119', direct:
+      { call:'119', label:'119', msg:'【緊急】這裡發生火災，我正在撥打119！我的位置：' } },
+    { i:'shield', name:'人身危險', sub:'110', q:'你方便出聲講電話嗎？', opts:[
+      { t:'可以講電話', s:'立即報警', hot:true, call:'110', label:'110',
         msg:'【緊急】我遇到危險，正在報警(110)。請盡快聯絡我！我的位置：' },
-      { t:'不方便出聲', s:'只傳簡訊，請聯絡人代為報警', smsOnly:true,
-        msg:'【緊急・請勿回電】我遇到危險不方便講話，請立刻幫我報警(110)！我的位置：' }
-    ]},
-    { icon:'🧭', name:'迷路／受困', sub:'119 / 聯絡人', q:'有沒有立即的危險？', opts:[
-      { t:'有危險（山區、水邊、受傷、天黑）', s:'撥打 119 求援', hot:true, call:'119', label:'119 救援',
+      { t:'不方便出聲', s:'只傳簡訊，請聯絡人代為報警', smsOnly:true, tag:'簡訊',
+        msg:'【緊急・請勿回電】我遇到危險不方便講話，請立刻幫我報警(110)！我的位置：' } ]},
+    { i:'compass', name:'迷路受困', sub:'119 / 聯絡人', q:'有沒有立即的危險？', opts:[
+      { t:'有危險', s:'山區、水邊、受傷或天黑', hot:true, call:'119', label:'119',
         msg:'【緊急】我迷路／受困且有危險，正在撥打119求援。我的位置：' },
-      { t:'沒有危險，請人來接', s:'撥給緊急聯絡人', call:'contact',
-        msg:'我迷路／受困了，請來接我。我的位置：' }
-    ]},
-    { icon:'✅', name:'報平安', sub:'只傳簡訊', direct:
+      { t:'沒有危險，請人來接', s:'通知聯絡人', call:'contact', tag:'聯絡人',
+        msg:'我迷路／受困了，請來接我。我的位置：' } ]},
+    { i:'check', name:'報平安', sub:'只傳簡訊', direct:
       { smsOnly:true, msg:'我目前平安，不用擔心。我的位置：' } }
   ];
 
-  const wiz = $('wiz');
-  const closeWiz = () => { wiz.style.display = 'none'; };
-  $('wizCancel').onclick = closeWiz;
-  wiz.onclick = e => { if (e.target === wiz) closeWiz(); };
-
   function openScenario(sc){
     if (sc.direct) return runAction(sc.direct);
-    $('wizTitle').textContent = sc.icon + ' ' + sc.name;
+    $('wizTitle').innerHTML = `${ico(sc.i)}${sc.name}`;
     $('wizQ').textContent = sc.q;
     const box = $('wizOpts'); box.innerHTML = '';
     sc.opts.forEach(o => {
       const b = document.createElement('button');
-      if (o.hot) b.className = 'hot';
-      b.innerHTML = `${o.t}<small>${o.s}，並傳位置簡訊給聯絡人</small>`;
-      if (o.smsOnly) b.innerHTML = `${o.t}<small>${o.s}</small>`;
-      b.onclick = () => { closeWiz(); runAction(o); };
+      b.className = 'opt' + (o.hot ? ' hot' : '');
+      b.innerHTML = `<div><div class="t">${o.t}</div><div class="s">${o.s}</div></div><span class="tag num">${o.tag || o.label}</span>`;
+      b.onclick = () => { hide(true); runAction(o); };
       box.appendChild(b);
     });
-    wiz.style.display = 'flex';
+    show('wiz');
   }
-
   SCENARIOS.forEach(sc => {
     const b = document.createElement('button');
-    b.innerHTML = `${sc.icon} ${sc.name}<small>${sc.sub}</small>`;
+    b.className = 'tile';
+    b.innerHTML = `${ico(sc.i)}<div><div class="t">${sc.name}</div><div class="s">${sc.sub}</div></div>`;
     b.onclick = () => openScenario(sc);
     $('scen').appendChild(b);
   });
 
-  // 從簡訊 App 回到此頁時，提示撥號
+  // 回到此頁時提醒撥號
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && pendingCall) {
       if (navigator.vibrate) navigator.vibrate(150);
-      toast('請按下方按鈕撥號');
+      $('steps').firstElementChild.classList.add('done');
     }
   });
 
@@ -398,13 +479,12 @@
     await freshPos();
     if (!pos) return toast('尚未取得位置');
     const text = smsBody();
-    if (navigator.share) {
-      try { await navigator.share({ title:'我的位置', text }); } catch(e) {}
-    } else if (navigator.clipboard) {
-      try { await navigator.clipboard.writeText(text); toast('已複製位置訊息'); } catch(e) { toast(mapsLink()); }
-    } else toast(mapsLink());
+    if (navigator.share) { try { await navigator.share({ title:'我的位置', text }); } catch(e) {} }
+    else if (navigator.clipboard) { try { await navigator.clipboard.writeText(text); toast('已複製位置'); } catch(e) { toast(mapsLink()); } }
+    else toast(mapsLink());
   };
 
+  $('phone').addEventListener('input', renderContacts);
   renderContacts();
   startWatch();
 })();
