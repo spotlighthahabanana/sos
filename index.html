@@ -62,6 +62,21 @@
     padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:9}
   .toast.show{opacity:1}
   .hint{font-size:12px;color:var(--mute);line-height:1.6;margin:6px 2px 0}
+  .scen{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .scen button{background:#2a1a1a;border:1px solid #4a2323;padding:16px 6px;font-size:17px;font-weight:700}
+  .scen button small{display:block;font-size:12px;font-weight:400;color:var(--mute);margin-top:2px}
+  #wiz{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:flex-end;z-index:8}
+  #wiz .sheet{width:100%;background:var(--card);border-radius:20px 20px 0 0;
+    padding:18px 14px max(18px,env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+  #wiz h2{margin:0 0 4px;font-size:22px}
+  #wiz .q{color:var(--mute);margin:0 0 14px;font-size:15px}
+  #wiz .opts{display:flex;flex-direction:column;gap:10px}
+  #wiz .opts button{padding:20px 14px;font-size:20px;font-weight:700;text-align:left;background:#2c2c31}
+  #wiz .opts button.hot{background:var(--red)}
+  #wiz .opts button small{display:block;font-size:13px;font-weight:400;opacity:.8;margin-top:4px}
+  #wiz .cancel{margin-top:12px;width:100%;padding:14px;background:transparent;color:var(--mute);font-size:16px}
+  #callBar .two{display:grid;grid-template-columns:1fr;gap:8px}
+  #callBar a.alt{background:#2c2c31;font-size:18px;padding:14px}
 </style>
 </head>
 <body>
@@ -76,6 +91,12 @@
     <button class="btn-sm" id="saveBtn">儲存</button>
   </div>
   <div class="contacts" id="contacts"></div>
+</div>
+
+<!-- 情境快選 -->
+<div class="card">
+  <label>情境快選（選完自動傳位置簡訊並撥號）</label>
+  <div class="scen" id="scen"></div>
 </div>
 
 <!-- 地圖 -->
@@ -113,9 +134,19 @@
 </div>
 
 <div id="callBar">
-  <p>簡訊已開啟 — 傳送後按下方按鈕撥號</p>
-  <a id="callNowLink" href="#">📞 立即撥打</a>
+  <p id="callBarTip">簡訊已開啟 — 傳送後按下方按鈕撥號</p>
+  <div class="two">
+    <a id="callNowLink" href="#">📞 立即撥打</a>
+    <a id="callAltLink" class="alt" href="#" style="display:none"></a>
+  </div>
 </div>
+
+<div id="wiz"><div class="sheet">
+  <h2 id="wizTitle"></h2>
+  <p class="q" id="wizQ"></p>
+  <div class="opts" id="wizOpts"></div>
+  <button class="cancel" id="wizCancel">取消</button>
+</div></div>
 
 <div class="toast" id="toast"></div>
 
@@ -229,35 +260,130 @@
   $('refreshBtn').onclick = () => { lastMapPos = null; $('locInfo').textContent = '重新定位中…'; startWatch(); };
 
   // ---------- 簡訊 / 撥號 ----------
-  function smsBody(){
-    let b = $('msg').value.trim();
+  function smsBody(prefix){
+    let b = (prefix || $('msg').value).trim();
     if (pos) b += `\n${mapsLink()}\n(誤差約${Math.round(pos.acc)}公尺)`;
     else b += '\n(目前無法取得定位)';
     return b;
   }
-  function smsUrl(n){
-    return `sms:${n}${isIOS ? '&' : '?'}body=${encodeURIComponent(smsBody())}`;
+  function smsUrl(n, prefix){
+    return `sms:${n}${isIOS ? '&' : '?'}body=${encodeURIComponent(smsBody(prefix))}`;
   }
   const go = url => { window.location.href = url; };
 
-  async function sendSMS(n){
+  async function sendSMS(n, prefix){
     if (!pos) toast('定位中，稍候…');
     await freshPos();
-    go(smsUrl(n));
+    go(smsUrl(n, prefix));
   }
 
-  $('sosBtn').onclick = async () => {
-    const n = currentNumber(); if (!n) return;
-    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-    pendingCall = n;
-    $('callNowLink').href = 'tel:' + n;
-    $('callNowLink').textContent = '📞 立即撥打 ' + n;
+  const hideBar = () => { $('callBar').style.display = 'none'; pendingCall = null; };
+  function showCallBar(callNum, label, altNum, tip){
+    pendingCall = callNum || altNum;
+    $('callBarTip').textContent = tip || '簡訊已開啟 — 傳送後按下方按鈕撥號';
+    const main = $('callNowLink'), alt = $('callAltLink');
+    if (callNum) {
+      main.style.display = 'block';
+      main.href = 'tel:' + callNum;
+      main.textContent = '📞 立即撥打 ' + (label || callNum);
+    } else main.style.display = 'none';
+    if (altNum && altNum !== callNum) {
+      alt.style.display = 'block'; alt.href = 'tel:' + altNum; alt.textContent = '📞 撥給聯絡人 ' + altNum;
+    } else alt.style.display = 'none';
     $('callBar').style.display = 'block';
-    await sendSMS(n);
+  }
+
+  // 通用執行：先傳簡訊給聯絡人，再撥 call（119 / 110 / 'contact' / null）
+  async function runAction({ msg, call, label, smsOnly }){
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    const contact = clean($('phone').value) || selected;
+    const callNum = call === 'contact' ? contact : call;
+    if (call === 'contact' && !contact) { toast('請先輸入緊急聯絡人電話'); $('phone').focus(); return; }
+
+    if (!contact) {            // 沒有聯絡人：無法傳簡訊，直接撥號
+      if (callNum) { toast('未設定聯絡人，直接撥號'); go('tel:' + callNum); }
+      else toast('請先輸入緊急聯絡人電話');
+      return;
+    }
+    if (smsOnly) {
+      showCallBar(null, null, null, '簡訊已開啟 — 請按「傳送」');
+      setTimeout(hideBar, 8000);
+    } else {
+      showCallBar(callNum, label, (call === '119' || call === '110') ? contact : null);
+    }
+    await sendSMS(contact, msg);
+  }
+
+  $('sosBtn').onclick = () => {
+    const n = currentNumber(); if (!n) return;
+    runAction({ call: 'contact' });
   };
   $('smsOnly').onclick = () => { const n = currentNumber(); if (n) sendSMS(n); };
   $('callOnly').onclick = () => { const n = currentNumber(); if (n) go('tel:' + n); };
-  $('callNowLink').onclick = () => { setTimeout(() => { $('callBar').style.display = 'none'; pendingCall = null; }, 1500); };
+  $('callNowLink').onclick = () => setTimeout(hideBar, 1500);
+  $('callAltLink').onclick = () => setTimeout(hideBar, 1500);
+
+  // ---------- 情境快選 ----------
+  const SCENARIOS = [
+    { icon:'🚗', name:'車禍', sub:'119 / 110', q:'有沒有人受傷？', opts:[
+      { t:'有人受傷', s:'撥打 119 叫救護車', hot:true, call:'119', label:'119 救護',
+        msg:'【緊急】我發生車禍，有人受傷，正在撥打119。請盡快聯絡我！我的位置：' },
+      { t:'沒有人受傷', s:'撥打 110 報警處理', call:'110', label:'110 報警',
+        msg:'【通知】我發生車禍，沒有人受傷，正在報警處理。我的位置：' }
+    ]},
+    { icon:'🩺', name:'急病／受傷', sub:'119', q:'當事人的狀況？', opts:[
+      { t:'昏倒、意識不清或呼吸困難', s:'撥打 119', hot:true, call:'119', label:'119 救護',
+        msg:'【緊急】有人昏倒／意識不清或呼吸困難，正在叫救護車(119)。請盡快聯絡我！位置：' },
+      { t:'清醒，但需要立即就醫', s:'撥打 119', call:'119', label:'119 救護',
+        msg:'【緊急】我身體不適需要就醫，正在叫救護車(119)。我的位置：' },
+      { t:'還可以，請人來接我', s:'撥給緊急聯絡人', call:'contact',
+        msg:'我身體不太舒服，請來接我。我的位置：' }
+    ]},
+    { icon:'🔥', name:'火災', sub:'119', direct:
+      { call:'119', label:'119 消防', msg:'【緊急】這裡發生火災，我正在撥打119！我的位置：' } },
+    { icon:'⚠️', name:'人身危險', sub:'110', q:'你方便出聲講電話嗎？', opts:[
+      { t:'可以講電話', s:'撥打 110 報警', hot:true, call:'110', label:'110 報警',
+        msg:'【緊急】我遇到危險，正在報警(110)。請盡快聯絡我！我的位置：' },
+      { t:'不方便出聲', s:'只傳簡訊，請聯絡人代為報警', smsOnly:true,
+        msg:'【緊急・請勿回電】我遇到危險不方便講話，請立刻幫我報警(110)！我的位置：' }
+    ]},
+    { icon:'🧭', name:'迷路／受困', sub:'119 / 聯絡人', q:'有沒有立即的危險？', opts:[
+      { t:'有危險（山區、水邊、受傷、天黑）', s:'撥打 119 求援', hot:true, call:'119', label:'119 救援',
+        msg:'【緊急】我迷路／受困且有危險，正在撥打119求援。我的位置：' },
+      { t:'沒有危險，請人來接', s:'撥給緊急聯絡人', call:'contact',
+        msg:'我迷路／受困了，請來接我。我的位置：' }
+    ]},
+    { icon:'✅', name:'報平安', sub:'只傳簡訊', direct:
+      { smsOnly:true, msg:'我目前平安，不用擔心。我的位置：' } }
+  ];
+
+  const wiz = $('wiz');
+  const closeWiz = () => { wiz.style.display = 'none'; };
+  $('wizCancel').onclick = closeWiz;
+  wiz.onclick = e => { if (e.target === wiz) closeWiz(); };
+
+  function openScenario(sc){
+    if (sc.direct) return runAction(sc.direct);
+    $('wizTitle').textContent = sc.icon + ' ' + sc.name;
+    $('wizQ').textContent = sc.q;
+    const box = $('wizOpts'); box.innerHTML = '';
+    sc.opts.forEach(o => {
+      const b = document.createElement('button');
+      if (o.hot) b.className = 'hot';
+      b.innerHTML = `${o.t}<small>${o.s}，並傳位置簡訊給聯絡人</small>`;
+      if (o.smsOnly) b.innerHTML = `${o.t}<small>${o.s}</small>`;
+      b.onclick = () => { closeWiz(); runAction(o); };
+      box.appendChild(b);
+    });
+    wiz.style.display = 'flex';
+  }
+
+  SCENARIOS.forEach(sc => {
+    const b = document.createElement('button');
+    b.innerHTML = `${sc.icon} ${sc.name}<small>${sc.sub}</small>`;
+    b.onclick = () => openScenario(sc);
+    $('scen').appendChild(b);
+  });
 
   // 從簡訊 App 回到此頁時，提示撥號
   document.addEventListener('visibilitychange', () => {
